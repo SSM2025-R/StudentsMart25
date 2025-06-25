@@ -3812,93 +3812,86 @@
                 showAlert('Please Login', 'You need to login to view your listings', 'warning');
                 return;
             }
-            // Open in new tab
-            window.open('/my-listings', '_blank')
-        }
-
-        // Add this function to handle the my-listings page load
-        function initializeMyListingsPage() {
-            if (window.location.pathname === '/my-listings') {
-              const heroSection = document.querySelector('.hero-section');
-              const searchSection = document.querySelector('.search-section');
-              const listingsSection = document.getElementById('listingsSection');
-              
-              if (heroSection) heroSection.style.display = 'none';
-              if (searchSection) searchSection.style.display = 'none';
-              if (listingsSection) listingsSection.style.display = 'block';
-              
-              // Show loading state
-              const listingsGrid = document.getElementById('listingsGrid');
-              if (listingsGrid) {
+            
+            // Instead of navigating, just show the listings section
+            const heroSection = document.querySelector('.hero-section');
+            const searchSection = document.querySelector('.search-section');
+            const listingsSection = document.getElementById('listingsSection');
+            
+            if (heroSection) heroSection.style.display = 'none';
+            if (searchSection) searchSection.style.display = 'none';
+            if (listingsSection) listingsSection.style.display = 'block';
+            
+            // Show loading state
+            const listingsGrid = document.getElementById('listingsGrid');
+            if (listingsGrid) {
                 listingsGrid.innerHTML = '<div class="text-center w-100 py-5"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
                 
                 // Load my listings
-                fetch('/api/my-listings', {
-                  credentials: 'same-origin'
-                })
-                .then(response => response.json())
-                .then(data => {
-                  // Create the header with title and create button
-                  listingsGrid.innerHTML = `
-                    <div class="col-12 mb-4">
-                      <div class="d-flex justify-content-between align-items-center">
-                        <h2 class="mb-0">My Listings</h2>
-                        <button class="btn btn-primary" onclick="showCreateListing()">
-                          <i class="fas fa-plus-circle me-2"></i>Create New Listing
-                        </button>
-                      </div>
-                    </div>
-                  `;
-                  
-                  if (data.listings.length === 0) {
-                    listingsGrid.innerHTML += `
-                      <div class="col-12 text-center">
-                        <div class="alert alert-info">
-                          <i class="fas fa-info-circle me-2"></i>
-                          You haven't created any listings yet.
-                        </div>
-                      </div>
-                    `;
-                    return;
-                  }
-                  
-                  // Add each listing to the grid
-                  data.listings.forEach(listing => {
-                    const imageUrl = listing.image_url.startsWith('http') ? 
-                      listing.image_url : `/static/${listing.image_url}`;
+                try {
+                    const response = await fetch('/api/my-listings', {
+                        credentials: 'same-origin'
+                    });
+                    const data = await response.json();
                     
-                    listingsGrid.innerHTML += `
-                      <div class="col-md-4 mb-4">
-                        <div class="card h-100">
-                          <img src="${imageUrl}" class="card-img-top" alt="${listing.title}" 
-                            style="height: 200px; object-fit: cover;">
-                          <div class="card-body">
-                            <h5 class="card-title">${listing.title}</h5>
-                            <p class="card-text text-muted">?${listing.price}</p>
-                            <p class="card-text">${listing.description.substring(0, 100)}${listing.description.length > 100 ? '...' : ''}</p>
-                            <div class="d-flex gap-2 mb-3">
-                              <span class="badge bg-primary">${listing.category}</span>
-                              <span class="badge bg-secondary">${listing.condition}</span>
+                    // Create the header with title and create button
+                    listingsGrid.innerHTML = `
+                        <div class="col-12 mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h2 class="mb-0">My Listings</h2>
+                                <button class="btn btn-primary" onclick="showCreateListing()">
+                                    <i class="fas fa-plus-circle me-2"></i>Create New Listing
+                                </button>
                             </div>
-                            <div class="d-flex gap-2">
-                              
-                              <button class="btn btn-outline-danger btn-sm flex-grow-1" 
-                                onclick="deleteListing(${listing.id})">
-                                <i class="fas fa-trash me-2"></i>Delete
-                              </button>
-                            </div>
-                          </div>
                         </div>
-                      </div>
                     `;
-                  });
-                })
-                .catch(error => {
-                  showAlert('Error', error.message, 'error');
-                });
-              }
+                    
+                    if (data.listings.length === 0) {
+                        listingsGrid.innerHTML += `
+                            <div class="col-12 text-center">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    You haven't created any listings yet.
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // Add each listing to the grid
+                    data.listings.forEach(listing => {
+                        const imageUrl = listing.image_url.startsWith('http') ? 
+                            listing.image_url : `/static/${listing.image_url}`;
+                        
+                        listingsGrid.innerHTML += `
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <img src="${imageUrl}" class="card-img-top" alt="${listing.title}" 
+                                        style="height: 200px; object-fit: cover;">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${listing.title}</h5>
+                                        <p class="card-text text-muted">₹${listing.price}</p>
+                                        <p class="card-text">${listing.description.substring(0, 100)}${listing.description.length > 100 ? '...' : ''}</p>
+                                        <div class="d-flex gap-2 mb-3">
+                                            <span class="badge bg-primary">${listing.category}</span>
+                                            <span class="badge bg-secondary">${listing.condition}</span>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-outline-danger btn-sm flex-grow-1" 
+                                                onclick="deleteListing(${listing.id})">
+                                                <i class="fas fa-trash me-2"></i>Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } catch (error) {
+                    showAlert('Error', error.message, 'error');
+                }
             }
-          }
+        }
         
         async function showWishlist() {
             if (!currentUser) {
@@ -3906,64 +3899,61 @@
                 return;
             }
             
-            // Redirect to the wishlist page
-            window.open('/my-wishlist', '_blank')
-        }
-        
-        // Add this function to handle the wishlist page initialization
-        function initializeWishlistPage() {
-            if (window.location.pathname === '/my-wishlist') {
-                const heroSection = document.querySelector('.hero-section');
-                const searchSection = document.querySelector('.search-section');
+            // Instead of navigating, show the wishlist section
+            const heroSection = document.querySelector('.hero-section');
+            const searchSection = document.querySelector('.search-section');
+            const listingsSection = document.getElementById('listingsSection');
+            
+            if (heroSection) heroSection.style.display = 'none';
+            if (searchSection) searchSection.style.display = 'none';
+            if (listingsSection) listingsSection.style.display = 'block';
+            
+            // Show loading state
+            const listingsGrid = document.getElementById('listingsGrid');
+            if (listingsGrid) {
+                listingsGrid.innerHTML = '<div class="text-center w-100 py-5"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
                 
-                if (heroSection) heroSection.style.display = 'none';
-                if (searchSection) searchSection.style.display = 'none';
-                
-                // Show loading state
-                const listingsGrid = document.getElementById('listingsGrid');
-                if (listingsGrid) {
-                    listingsGrid.innerHTML = '<div class="text-center w-100 py-5"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
-                    
+                try {
                     // Load wishlist items
-                    fetch('/api/wishlist', {
+                    const response = await fetch('/api/wishlist', {
                         credentials: 'same-origin'
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        // Create the header with title
-                        listingsGrid.innerHTML = `
+                    });
+                    const data = await response.json();
+                    
+                    // Create the header with title
+                    listingsGrid.innerHTML = `
                         <div class="col-12 mb-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h2 class="mb-0">My Wishlist</h2>
                             </div>
                         </div>
-                        `;
-                        
-                        if (data.items.length === 0) {
-                            listingsGrid.innerHTML += `
+                    `;
+                    
+                    if (data.items.length === 0) {
+                        listingsGrid.innerHTML += `
                             <div class="col-12 text-center">
                                 <div class="alert alert-info">
                                     <i class="fas fa-info-circle me-2"></i>
                                     Your wishlist is empty. Browse listings to add items to your wishlist.
                                 </div>
                             </div>
-                            `;
-                            return;
-                        }
+                        `;
+                        return;
+                    }
+                    
+                    // Add each wishlist item to the grid
+                    data.items.forEach(item => {
+                        const imageUrl = item.listing.image_url.startsWith('http') ? 
+                            item.listing.image_url : `/static/${item.listing.image_url}`;
                         
-                        // Add each wishlist item to the grid
-                        data.items.forEach(item => {
-                            const imageUrl = item.listing.image_url.startsWith('http') ? 
-                                item.listing.image_url : `/static/${item.listing.image_url}`;
-                            
-                            listingsGrid.innerHTML += `
+                        listingsGrid.innerHTML += `
                             <div class="col-md-4 mb-4">
                                 <div class="card h-100">
                                     <img src="${imageUrl}" class="card-img-top" alt="${item.listing.title}" 
                                         style="height: 200px; object-fit: cover;">
                                     <div class="card-body">
                                         <h5 class="card-title">${item.listing.title}</h5>
-                                        <p class="card-text text-muted">?${item.listing.price}</p>
+                                        <p class="card-text text-muted">₹${item.listing.price}</p>
                                         <p class="card-text">Seller: ${item.listing.seller.name}</p>
                                         <div class="d-flex gap-2">
                                             <button class="btn btn-primary btn-sm flex-grow-1" 
@@ -3978,17 +3968,15 @@
                                     </div>
                                 </div>
                             </div>
-                            `;
-                        });
-                    })
-                    .catch(error => {
-                        showAlert('Error', error.message, 'error');
+                        `;
                     });
+                } catch (error) {
+                    showAlert('Error', error.message, 'error');
                 }
             }
         }
-        
-        // Add this function to remove items from wishlist
+
+        // Keep the removeFromWishlist function but update it to refresh properly
         async function removeFromWishlist(wishlistId) {
             try {
                 const result = await Swal.fire({
@@ -4018,8 +4006,8 @@
                         'success'
                     );
                     
-                    // Refresh the wishlist page
-                    initializeWishlistPage();
+                    // Refresh the wishlist by calling showWishlist again
+                    showWishlist();
                 }
             } catch (error) {
                 showAlert('Error', error.message, 'error');
